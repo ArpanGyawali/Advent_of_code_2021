@@ -3,65 +3,77 @@ import collections
 def part1(file):
   with open(file, 'r') as f:
     lines = f.readlines()
-    matrix = [line.strip() for line in lines]
-    new_len = len(matrix) + 2
-    new_matrix = [None] * new_len
-    new_matrix[0] = '9' * new_len
-    for i in range(len(matrix)):
-      new_matrix[i+1] = '9' + matrix[i] + '9'
-    new_matrix[101] = '9' * new_len
-    print(new_matrix)
-    count = 0
-    sum_risk_level = 0
-    low = []
-    for i in range(1, new_len-1):
-      for j in range(1, new_len-1):
-        adjacent = [new_matrix[i-1][j], new_matrix[i+1][j], new_matrix[i][j-1], new_matrix[i][j+1]]
-        adjacent.sort()
-        #smallest num in sorted list of adjacent nums is adjacent[0]
-        if new_matrix[i][j] < adjacent[0]:   
-          print(new_matrix[i][j], adjacent)
-          low.append((i,j))
-          count += 1
-          sum_risk_level += int(new_matrix[i][j]) + 1
-
-    print(count)
-    print(sum_risk_level)
-    print('\n\n\n\n\n\n\n\n')
-    return low, new_matrix
-
-
-      
+    navigation = [line.strip() for line in lines]
+    opening = ['(', '[', '{', '<']
+    closing = [')', ']', '}', '>']
+    points = {
+      ')': 3,
+      ']': 57,
+      '}': 1197,
+      '>': 25137
+    }
+    score = 0
+    for syntax in navigation:
+      if syntax[0] in opening:
+        stack = [syntax[0]]
+      i = 1
+      while stack and i < len(syntax):
+        if syntax[i] in opening:
+          stack.append(syntax[i])
+          i += 1
+        elif syntax[i] in closing:
+          last = stack.pop()
+          print(last, syntax[i])
+          if opening.index(last) != closing.index(syntax[i]):   #non matching parenthesis
+            score += points[syntax[i]]
+            break
+          else:
+            i += 1
+            continue
+    print(score)
 
 def part2(file):
   with open(file, 'r') as f:
-    low, new_matrix = part1(file)
-
-    # Do some BFS
-    size_array = []
-    visited = set()
-    for row, col in low:
-      if (row, col) not in visited:
-        size = 0
-        Q = collections.deque()
-        Q.append((row, col))
-        while Q:
-          (r, c) = Q.popleft()
-          if (r,c) in visited:
+    lines = f.readlines()
+    navigation = [line.strip() for line in lines]
+    opening = ['(', '[', '{', '<']
+    closing = [')', ']', '}', '>']
+    points = {
+      ')': 1,
+      ']': 2,
+      '}': 3,
+      '>': 4
+    }
+    score_array = []
+    for syntax in navigation:
+      if syntax[0] in opening:
+        stack = [syntax[0]]
+      i = 1
+      while stack:
+        if i == len(syntax):
+          remaining = [closing[index] for index in [i for i in [opening.index(stack[j]) for j in range(len(stack)-1, -1, -1)]]]
+          print(remaining, syntax)
+          score = 0
+          for symbol in remaining:
+            score = score * 5 + points[symbol]
+          score_array.append(score)
+          break
+        elif syntax[i] in opening:
+          stack.append(syntax[i])
+          i += 1
+        elif syntax[i] in closing: 
+          last = stack.pop()
+          if opening.index(last) != closing.index(syntax[i]):   #non matching parenthesis
+            break
+          else:
+            i += 1
             continue
-          visited.add((r,c))
-          size += 1
-          for neighbour in [(0, 1), (0, -1), (-1, 0), (1, 0)]:
-            rr = r + neighbour[0]
-            cc = c + neighbour[1]
-            if int(new_matrix[rr][cc]) != 9:
-              Q.append((rr, cc))
-        size_array.append(size)
-    
-    size_array.sort()
-    print(size_array)
-    print(size_array[-1] * size_array[-2] * size_array[-3])
+    score_array.sort()
+    print(len(score_array))
+    middle = int((len(score_array) + 1)/2)
+    print(score_array, middle)
+    print(score_array[middle - 1])
             
 
-#part1('day9_data.txt')
-part2('day9_data.txt')
+#part1('day10_data.txt')
+part2('day10_data.txt')
